@@ -29,9 +29,9 @@ func PostUpload(ctx *gin.Context) {
 	files := form.File["files"]
 
 	for _, file := range files {
+		var prevId string
 		chunkSize, _ := strconv.Atoi(os.Getenv("CHUNKSIZE"))
 		content, _ := file.Open()
-		defer content.Close()
 
 		reader := bufio.NewReaderSize(content, chunkSize)
 		for i := 0; i < int(math.Ceil(float64(file.Size)/float64(chunkSize))); i++ {
@@ -39,7 +39,18 @@ func PostUpload(ctx *gin.Context) {
 			size, _ := reader.Read(splitBuff)
 			chunkSum := fmt.Sprintf("%x", md5.Sum(splitBuff[:size]))
 			log.Printf("%d %s", size, chunkSum)
-			discordutil.UploadFileToChannel(bot, chunkSum, bytes.NewBuffer(splitBuff[:size]))
+			message := discordutil.UploadFileToChannel(bot, chunkSum, bytes.NewBuffer(splitBuff[:size]))
+
+			if i == 0 {
+				table.AddFile(file.Filename, message.ID)
+				prevId = message.ID
+			} else {
+				table.AddToChain(prevId, message.ID)
+				prevId = message.ID
+			}
 		}
+		content.Close()
 	}
+	tableBytes, _ = json.Marshal(table)
+	os.WriteFile(storage.DBPath, tableBytes, 0666)
 }
