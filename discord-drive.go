@@ -11,6 +11,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/pierre0210/discord-drive/internal/handler"
 	"github.com/pierre0210/discord-drive/internal/middleware"
+	"github.com/pierre0210/discord-drive/internal/storage"
 )
 
 func main() {
@@ -18,6 +19,7 @@ func main() {
 	if err != nil {
 		log.Fatalln("Fail to load .env file.")
 	}
+	storage.InitTable()
 
 	token := os.Getenv("TOKEN")
 	port := 5000
@@ -36,9 +38,9 @@ func main() {
 		log.Fatalln(err.Error())
 	}
 	defer bot.Close()
+	log.Println("Bot logged in.")
 	router.Run(fmt.Sprintf(":%d", port))
 
-	log.Println("Bot logged in.")
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	<-c
