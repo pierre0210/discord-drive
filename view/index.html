@@ -3,6 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      table {
+        border: 1px solid black;
+        margin-top: 4px;
+      }
+      td {
+        border: 1px solid black;
+        padding: 4px;
+      }
+    </style>
 
     <title>Discord Drive</title>
   </head>
@@ -11,5 +21,16 @@
       <input name="files" type="file" multiple>
       <input type="submit">
     </form>
+    <table class="list"></table>
+
+    <script>
+      const list = document.querySelector(".list");
+      fetch("http://localhost:5000/files").then(async (data) => {
+        const files = await data.json();
+        const rows = Object.keys(files)
+          .map((name) => `<tr><td>${name}</td><td><a>Download</a></td></tr>`).join("");
+        list.innerHTML = rows
+      });
+    </script>
   </body>
 </html>
