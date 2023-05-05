@@ -31,7 +31,8 @@ func main() {
 	router := gin.Default()
 	router.LoadHTMLGlob("view/*")
 	router.GET("/", handler.GetIndex)
-	router.GET("/files", handler.GetFiles)
+	router.GET("/files", handler.GetFileList)
+	router.GET("/download", middleware.AddSession(bot), handler.GetFile)
 	router.POST("/upload", middleware.AddSession(bot), handler.PostUpload)
 
 	err = bot.Open()

@@ -9,7 +9,7 @@ import (
 	"github.com/pierre0210/discord-drive/internal/storage"
 )
 
-func GetFiles(ctx *gin.Context) {
+func GetFileList(ctx *gin.Context) {
 	var table storage.FileTable
 	tableBytes, _ := os.ReadFile(storage.DBPath)
 	json.Unmarshal(tableBytes, &table)

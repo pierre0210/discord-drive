@@ -28,7 +28,7 @@
       fetch("http://localhost:5000/files").then(async (data) => {
         const files = await data.json();
         const rows = Object.keys(files)
-          .map((name) => `<tr><td>${name}</td><td><a>Download</a></td></tr>`).join("");
+          .map((name) => `<tr><td>${name}</td><td><a href="http://localhost:5000/download?file=${name}">Download</a></td></tr>`).join("");
         list.innerHTML = rows
       });
     </script>
