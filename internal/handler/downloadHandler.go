@@ -31,7 +31,7 @@ func GetFile(ctx *gin.Context) {
 	header := ctx.Writer.Header()
 	header.Set("Transfer-Encoding", "chunked")
 	header.Set("Content-Type", "application/octet-stream")
-	header.Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", fileName))
+	header.Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, fileName))
 	ctx.Writer.WriteHeader(http.StatusOK)
 
 	for {
