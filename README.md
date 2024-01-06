@@ -13,11 +13,14 @@ go build discord-drive.go
     ```bash
     TOKEN=YOUR-DISCORD-BOT-TOKEN
     CHANNELID=STORAGE-CHANNEL-ID
+    PORT=5000
     CHUNKSIZE=10000000
     ```
 
 2. execute
 
-## TODO
-
-- [ ] command line interface
+- WebUI mode
+    `./discord-drive`
+- Command line mode
+    `./discord-drive -c -u path/to/file`
+    `./discord-drive -c -d filename`
