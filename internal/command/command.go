@@ -17,31 +17,33 @@ import (
 
 func Upload(bot *discordgo.Session, filePath string) {
 	if _, err := os.Stat(filePath); errors.Is(err, os.ErrNotExist) {
-		var table storage.FileTable
-		var prevId string
-		content, _ := os.Open(filePath)
-		chunkSize, _ := strconv.Atoi(os.Getenv("CHUNKSIZE"))
-		reader := bufio.NewReaderSize(content, chunkSize)
-		info, _ := content.Stat()
-		size := info.Size()
-		for i := 0; i < int(math.Ceil(float64(size)/float64(chunkSize))); i++ {
-			splitBuff := make([]byte, chunkSize)
-			size, _ := reader.Read(splitBuff)
-			log.Printf("%d bytes", size)
-			message := discordutil.UploadFileToChannel(bot, "chunk", bytes.NewBuffer(splitBuff[:size]))
-
-			if i == 0 {
-				table.AddFile(info.Name(), message.ID)
-				prevId = message.ID
-			} else {
-				table.AddToChain(prevId, message.ID)
-				prevId = message.ID
-			}
-		}
-		content.Close()
-	} else {
 		log.Println("file not exist")
+		return
 	}
+	var table storage.FileTable
+	var prevId string
+	tableBytes, _ := os.ReadFile(storage.DBPath)
+	json.Unmarshal(tableBytes, &table)
+	content, _ := os.Open(filePath)
+	chunkSize, _ := strconv.Atoi(os.Getenv("CHUNKSIZE"))
+	reader := bufio.NewReaderSize(content, chunkSize)
+	info, _ := content.Stat()
+	size := info.Size()
+	for i := 0; i < int(math.Ceil(float64(size)/float64(chunkSize))); i++ {
+		splitBuff := make([]byte, chunkSize)
+		size, _ := reader.Read(splitBuff)
+		log.Printf("%d bytes", size)
+		message := discordutil.UploadFileToChannel(bot, "chunk", bytes.NewBuffer(splitBuff[:size]))
+
+		if i == 0 {
+			table.AddFile(info.Name(), message.ID)
+			prevId = message.ID
+		} else {
+			table.AddToChain(prevId, message.ID)
+			prevId = message.ID
+		}
+	}
+	content.Close()
 }
 
 func Download(bot *discordgo.Session, fileName string) {
