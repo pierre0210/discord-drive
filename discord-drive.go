@@ -1,20 +1,24 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"os"
-	"os/signal"
+	"strconv"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-	"github.com/pierre0210/discord-drive/internal/handler"
-	"github.com/pierre0210/discord-drive/internal/middleware"
+	"github.com/pierre0210/discord-drive/internal/command"
+	"github.com/pierre0210/discord-drive/internal/server"
 	"github.com/pierre0210/discord-drive/internal/storage"
 )
 
 func main() {
+	var cmdMode bool
+	var listFileName bool
+	var filePath string
+	var fileName string
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatalln("Fail to load .env file.")
@@ -22,28 +26,32 @@ func main() {
 	storage.InitTable()
 
 	token := os.Getenv("TOKEN")
-	port := 5000
+	port, _ := strconv.Atoi(os.Getenv("PORT"))
+
+	flag.BoolVar(&cmdMode, "c", false, "command line mode")
+	flag.BoolVar(&listFileName, "l", false, "list all files")
+	flag.StringVar(&filePath, "u", "", "upload file")
+	flag.StringVar(&fileName, "d", "", "download file")
+	flag.Parse()
 
 	bot, err := discordgo.New(fmt.Sprintf("Bot %s", token))
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
-	router := gin.Default()
-	router.LoadHTMLGlob("view/*")
-	router.GET("/", handler.GetIndex)
-	router.GET("/files", handler.GetFileList)
-	router.GET("/download", middleware.AddSession(bot), handler.GetFile)
-	router.POST("/upload", middleware.AddSession(bot), handler.PostUpload)
-
 	err = bot.Open()
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
 	defer bot.Close()
 	log.Println("Bot logged in.")
-	router.Run(fmt.Sprintf(":%d", port))
 
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
-	<-c
+	if cmdMode {
+		if filePath != "" {
+			command.Upload(bot, filePath)
+		} else if fileName != "" {
+			command.Download(bot, fileName)
+		}
+	} else {
+		server.Init(bot, port)
+	}
 }
